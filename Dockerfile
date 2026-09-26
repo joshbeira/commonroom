@@ -1,4 +1,4 @@
-FROM node:22-bookworm-slim AS frontend
+FROM node:26-bookworm-slim AS frontend
 WORKDIR /web
 RUN corepack enable && corepack prepare pnpm@10.30.3 --activate
 COPY web/package.json web/pnpm-lock.yaml web/pnpm-workspace.yaml ./
