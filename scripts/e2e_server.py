@@ -1,5 +1,6 @@
 """Run browser tests against a fresh database, never a developer's household."""
 
+import logging
 import os
 import sys
 import tempfile
@@ -14,4 +15,5 @@ os.environ["APP_ENV"] = "development"
 
 with tempfile.TemporaryDirectory(prefix="commonroom-e2e-") as directory:
     app = create_app({"DATABASE": str(Path(directory) / "test.db"), "DEMO_ENABLED": True})
+    app.logger.setLevel(logging.WARNING)
     serve(app, host="127.0.0.1", port=8001, threads=24)

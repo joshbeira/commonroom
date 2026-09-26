@@ -23,6 +23,8 @@ The demo uses invented names and data. Browser tests run with a fresh temporary 
 
 Python uses Ruff. TypeScript, TSX, CSS, and frontend configuration use Prettier. Prefer comments that explain invariants and tradeoffs over comments that narrate syntax.
 
+Browser tests save screenshots under ignored `web/test-results/` by default. To deliberately refresh README images, run the browser suite with `UPDATE_SCREENSHOTS=true`, inspect the images, and commit only the intended visual changes.
+
 ## Changes to the schema
 
 Add the next numbered migration in `server/migrations/`, preserving existing migration files. Exercise migration from an existing database, and update backup/restore instructions if necessary. This project does not support automatic destructive migrations or downgrade migrations.

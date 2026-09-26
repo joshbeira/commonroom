@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import {
   Activity,
-  ArrowDown,
   ArrowRight,
   Globe2,
   LockKeyhole,

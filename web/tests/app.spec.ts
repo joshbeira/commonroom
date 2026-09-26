@@ -1,6 +1,11 @@
 import { expect, test } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 
+const screenshotDirectory =
+  process.env.UPDATE_SCREENSHOTS === "true"
+    ? "../docs/images"
+    : "test-results/screenshots";
+
 test("the demo is navigable, accessible, and preserves a created expense", async ({
   page,
 }) => {
@@ -23,7 +28,7 @@ test("the demo is navigable, accessible, and preserves a created expense", async
   ).toBeVisible();
   await expect(page.getByText("All caught up")).toBeVisible();
   await page.screenshot({
-    path: "../docs/images/dashboard.png",
+    path: `${screenshotDirectory}/dashboard.png`,
     fullPage: true,
   });
   expect(
@@ -33,6 +38,9 @@ test("the demo is navigable, accessible, and preserves a created expense", async
         .analyze()
     ).violations,
   ).toEqual([]);
+  const observer = await page.context().newPage();
+  await observer.goto("/");
+  await expect(observer.getByText("All caught up")).toBeVisible();
   await page.getByRole("button", { name: "Add expense", exact: true }).click();
   await page.getByLabel("What was it for?").fill("A plant for the kitchen");
   await page.getByLabel("Amount (£)").fill("10.01");
@@ -41,6 +49,10 @@ test("the demo is navigable, accessible, and preserves a created expense", async
     .getByRole("button", { name: "Add expense", exact: true })
     .click();
   await expect(page.getByRole("dialog")).not.toBeVisible();
+  await expect(
+    observer.getByRole("button", { name: /A plant for the kitchen Groceries/ }),
+  ).toBeVisible({ timeout: 8000 });
+  await observer.close();
   await page
     .getByRole("button", { name: /A plant for the kitchen Groceries/ })
     .click();
@@ -63,7 +75,7 @@ test("the demo is navigable, accessible, and preserves a created expense", async
   await page.getByRole("button", { name: "Measure request" }).click();
   await expect(page.getByText("Last 2 requests")).toBeVisible();
   await page.screenshot({
-    path: "../docs/images/network-lab.png",
+    path: `${screenshotDirectory}/network-lab.png`,
     fullPage: true,
   });
   expect(
@@ -95,7 +107,10 @@ test("mobile navigation and expense dialog fit a narrow viewport", async ({
   await expect(
     page.getByRole("heading", { name: "Good to have you home, Alex." }),
   ).toBeVisible();
-  await page.screenshot({ path: "../docs/images/mobile.png", fullPage: true });
+  await page.screenshot({
+    path: `${screenshotDirectory}/mobile.png`,
+    fullPage: true,
+  });
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= window.innerWidth,
