@@ -30,8 +30,11 @@ def create_app(test_config=None):
         SESSION_COOKIE_SAMESITE="Lax",
         SESSION_COOKIE_SECURE=production,
         MAX_CONTENT_LENGTH=5 * 1024 * 1024,
-        TRUSTED_HOSTS=os.getenv("TRUSTED_HOSTS", "localhost,127.0.0.1").split(","),
-        PUBLIC_ORIGIN=os.getenv("PUBLIC_ORIGIN", "http://localhost:8000"),
+        TRUSTED_HOSTS=os.getenv(
+            "TRUSTED_HOSTS",
+            ",".join(filter(None, ("localhost", "127.0.0.1", os.getenv("RENDER_EXTERNAL_HOSTNAME")))),
+        ).split(","),
+        PUBLIC_ORIGIN=os.getenv("PUBLIC_ORIGIN", os.getenv("RENDER_EXTERNAL_URL", "http://localhost:8000")),
         PRODUCTION=production,
         TRUST_PROXY=os.getenv("TRUST_PROXY", "false").lower() == "true",
     )

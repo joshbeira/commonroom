@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: joshbeira-commonroom
+    runtime: docker
+    plan: free
+    branch: codex/free-hosting
+    healthCheckPath: /healthz
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: DEMO_ENABLED
+        value: "false"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: AUDIT_KEY
+        generateValue: true
