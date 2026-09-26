@@ -271,6 +271,7 @@ b {
   min-height: 100vh;
 }
 .sidebar {
+  overflow-y: auto;
   width: 224px;
   background: #f7f8f2;
   border-right: 1px solid var(--border);
@@ -2235,11 +2236,13 @@ form > .button {
 }
 @media (max-width: 760px) {
   .sidebar {
+    visibility: hidden;
     transform: translateX(-100%);
     transition: transform 0.2s;
     width: 224px;
   }
   .sidebar.is-open {
+    visibility: visible;
     transform: translateX(0);
   }
   .nav-backdrop {

@@ -107,6 +107,9 @@ test("mobile navigation and expense dialog fit a narrow viewport", async ({
   await expect(
     page.getByRole("heading", { name: "Good to have you home, Alex." }),
   ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Overview", exact: true }),
+  ).not.toBeVisible();
   await page.screenshot({
     path: `${screenshotDirectory}/mobile.png`,
     fullPage: true,
