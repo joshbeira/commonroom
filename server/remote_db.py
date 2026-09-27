@@ -39,7 +39,7 @@ class Row:
         return self.names
 
     def __getitem__(self, key):
-        return self.values[self.names.index(key)] if isinstance(key, str) else self.values[key]
+        return self.values[self.names.index(key.lower())] if isinstance(key, str) else self.values[key]
 
     def __iter__(self):
         return iter(self.values)
@@ -50,7 +50,9 @@ class Cursor:
         self.cursor = cursor
         self.lastrowid = cursor.lastrowid
         self.rowcount = cursor.rowcount
-        self.names = tuple(column[0] for column in (cursor.description or ()))
+        # Turso's SQL parser normalizes keyword column names (e.g. ACTION)
+        # to uppercase. The application's schema and JSON keys are lowercase.
+        self.names = tuple(column[0].lower() for column in (cursor.description or ()))
 
     def fetchone(self):
         values = _call(self.cursor.fetchone)
@@ -69,10 +71,7 @@ class Connection:
         self.connection = connection
 
     def execute(self, sql, params=()):
-        cursor = Cursor(_call(self.connection.execute, sql, params))
-        if sql.startswith("SELECT e.*,u.name AS actor") and "action" not in cursor.names:
-            logging.getLogger(__name__).error("Unexpected activity column names: %s", cursor.names)
-        return cursor
+        return Cursor(_call(self.connection.execute, sql, params))
 
     def executemany(self, sql, params):
         return Cursor(_call(self.connection.executemany, sql, params))

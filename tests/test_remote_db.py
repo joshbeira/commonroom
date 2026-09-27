@@ -24,6 +24,9 @@ def test_driver_rows_constraints_transactions_and_reopen(tmp_path):
     assert dict(row) == {"id": 1, "name": "kept"}
     assert [dict(row) for row in db.execute("SELECT * FROM items")] == [dict(row)]
     assert len(db.execute("SELECT * FROM items").fetchall()) == 1
+    keyword = db.execute("SELECT 'saved' AS ACTION").fetchone()
+    assert keyword["ACTION"] == keyword["action"] == "saved"
+    assert dict(keyword) == {"action": "saved"}
     db.close()
     reopened = Connection(libsql.connect(path, isolation_level=None))
     assert reopened.execute("SELECT name FROM items").fetchone()[0] == "kept"
