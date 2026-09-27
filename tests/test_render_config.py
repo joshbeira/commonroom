@@ -8,12 +8,14 @@ def test_render_origin_host_and_secure_session(tmp_path, monkeypatch):
     monkeypatch.setenv("RENDER_EXTERNAL_URL", "https://commonroom.example.com")
     monkeypatch.delenv("PUBLIC_ORIGIN", raising=False)
     monkeypatch.delenv("TRUSTED_HOSTS", raising=False)
-    app = create_app({
-        "TESTING": True,
-        "SECRET_KEY": "s" * 64,
-        "AUDIT_KEY": "a" * 64,
-        "DATABASE": str(tmp_path / "ledger.db"),
-    })
+    app = create_app(
+        {
+            "TESTING": True,
+            "SECRET_KEY": "s" * 64,
+            "AUDIT_KEY": "a" * 64,
+            "DATABASE": str(tmp_path / "ledger.db"),
+        }
+    )
     assert app.config["PUBLIC_ORIGIN"] == "https://commonroom.example.com"
     assert app.config["SESSION_COOKIE_SECURE"]
     client = app.test_client()

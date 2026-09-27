@@ -20,10 +20,13 @@ def create_app(test_config=None):
     root = Path(__file__).resolve().parent.parent
     app = Flask(__name__, static_folder=None)
     production = os.getenv("APP_ENV") == "production"
+    if production and os.getenv("RENDER") == "true" and not os.getenv("TURSO_DATABASE_URL"):
+        raise RuntimeError("Render hosting requires a persistent TURSO_DATABASE_URL.")
     app.config.update(
         SECRET_KEY=os.getenv("SECRET_KEY"),
         AUDIT_KEY=os.getenv("AUDIT_KEY"),
-        DATABASE=str(root / os.getenv("DATABASE_PATH", "instance/commonroom.db")),
+        DATABASE=os.getenv("TURSO_DATABASE_URL")
+        or str(root / os.getenv("DATABASE_PATH", "instance/commonroom.db")),
         DEMO_ENABLED=os.getenv("DEMO_ENABLED", "false").lower() == "true",
         SESSION_COOKIE_NAME="commonroom_session",
         SESSION_COOKIE_HTTPONLY=True,
@@ -32,14 +35,20 @@ def create_app(test_config=None):
         MAX_CONTENT_LENGTH=5 * 1024 * 1024,
         TRUSTED_HOSTS=os.getenv(
             "TRUSTED_HOSTS",
-            ",".join(filter(None, ("localhost", "127.0.0.1", os.getenv("RENDER_EXTERNAL_HOSTNAME")))),
+            ",".join(
+                filter(None, ("localhost", "127.0.0.1", os.getenv("RENDER_EXTERNAL_HOSTNAME")))
+            ),
         ).split(","),
-        PUBLIC_ORIGIN=os.getenv("PUBLIC_ORIGIN", os.getenv("RENDER_EXTERNAL_URL", "http://localhost:8000")),
+        PUBLIC_ORIGIN=os.getenv(
+            "PUBLIC_ORIGIN", os.getenv("RENDER_EXTERNAL_URL", "http://localhost:8000")
+        ),
         PRODUCTION=production,
         TRUST_PROXY=os.getenv("TRUST_PROXY", "false").lower() == "true",
     )
     if test_config:
         app.config.update(test_config)
+    if os.getenv("TURSO_DATABASE_URL") and not app.config["DATABASE"].startswith("libsql://"):
+        raise RuntimeError("TURSO_DATABASE_URL must use libsql:// for a libSQL database.")
     if app.config["TRUST_PROXY"]:
         # Enable only when the application port is reachable exclusively through one proxy.
         app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1)

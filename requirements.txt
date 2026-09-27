@@ -10,3 +10,4 @@ python-dotenv==1.2.3
 waitress==3.0.2
 Werkzeug==3.1.8
 gunicorn==26.2.0; sys_platform != 'win32'
+libsql==0.1.11

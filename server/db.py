@@ -1,5 +1,6 @@
 """Short transactions, parameterized SQL, and versioned migrations."""
 
+import os
 import sqlite3
 from contextlib import contextmanager
 from pathlib import Path
@@ -8,6 +9,10 @@ from flask import current_app, g
 
 
 def connect(path):
+    if path.startswith("libsql://"):
+        from .remote_db import connect as remote_connect
+
+        return remote_connect(path, os.environ.get("TURSO_AUTH_TOKEN", ""))
     connection = sqlite3.connect(path, timeout=5, isolation_level=None)
     connection.row_factory = sqlite3.Row
     connection.execute("PRAGMA foreign_keys = ON")
@@ -34,9 +39,12 @@ def transaction():
 
 
 def migrate(path):
-    Path(path).parent.mkdir(parents=True, exist_ok=True)
+    remote = path.startswith("libsql://")
+    if not remote:
+        Path(path).parent.mkdir(parents=True, exist_ok=True)
     db = connect(path)
-    db.execute("PRAGMA journal_mode = WAL")
+    if not remote:
+        db.execute("PRAGMA journal_mode = WAL")
     version = db.execute("PRAGMA user_version").fetchone()[0]
     for migration in sorted(Path(__file__).with_name("migrations").glob("*.sql")):
         number = int(migration.stem.split("_")[0])
