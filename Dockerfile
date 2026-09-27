@@ -9,7 +9,7 @@ RUN pnpm build
 FROM python:3.12-slim AS runtime
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 WORKDIR /app
-RUN groupadd --system commonroom && useradd --system --gid commonroom commonroom
+RUN groupadd --system commonroom && useradd --system --create-home --gid commonroom commonroom
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 COPY server/ ./server/

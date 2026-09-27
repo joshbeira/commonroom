@@ -3,6 +3,9 @@
 Writes commit at the remote primary; no local replica or ephemeral fallback is used.
 """
 
+import logging
+import os
+import re
 import sqlite3
 
 import libsql
@@ -15,7 +18,15 @@ def _call(function, *args):
         message = str(error)
         if "constraint failed" in message.lower():
             raise sqlite3.IntegrityError(message) from error
-        # Avoid returning connection details or database tokens to callers/logs.
+        # Retain diagnostic context without logging secrets, endpoints, or parameters.
+        for key in ("TURSO_AUTH_TOKEN", "TURSO_DATABASE_URL"):
+            if value := os.getenv(key):
+                message = message.replace(value, "[redacted]")
+        message = re.sub(r"eyJ[A-Za-z0-9_.-]+", "[redacted]", message)
+        message = re.sub(r"(?:https?|libsql)://\\S+", "[endpoint]", message)
+        logging.getLogger(__name__).error(
+            "Remote database %s failed: %s", function.__name__, message[:400]
+        )
         raise sqlite3.OperationalError("Remote database operation failed") from error
 
 
