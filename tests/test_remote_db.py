@@ -35,6 +35,13 @@ def test_remote_storage_requires_a_token():
         connect("libsql://missing.example.com", "")
 
 
+def test_migration_script_errors_are_not_silently_ignored():
+    db = Connection(libsql.connect(":memory:", isolation_level=None))
+    with pytest.raises(sqlite3.OperationalError):
+        db.executescript("INVALID SQL;")
+    db.close()
+
+
 def test_render_never_falls_back_to_temporary_storage(monkeypatch):
     from server import create_app
 

@@ -75,7 +75,9 @@ class Connection:
         return Cursor(_call(self.connection.executemany, sql, params))
 
     def executescript(self, sql):
-        return _call(self.connection.executescript, sql)
+        # libsql 0.1.11's Connection.executescript silently discards errors;
+        # its cursor implementation propagates them so startup fails safely.
+        return _call(self.connection.cursor().executescript, sql)
 
     def commit(self):
         return _call(self.connection.commit)
