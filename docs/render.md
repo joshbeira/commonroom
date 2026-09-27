@@ -6,9 +6,12 @@ engine, because this application relies on SQLite's single-writer transactions.
 
 Set `TURSO_DATABASE_URL` to the database's `libsql://` URL and
 `TURSO_AUTH_TOKEN` to a database-scoped read/write token in Render's secret
-environment settings. Never commit either credential. The Blueprint generates
-independent, stable `SECRET_KEY` and `AUDIT_KEY` values; preserve those keys across
-redeployments, particularly the audit key.
+environment settings. Never commit either credential. Set independent, strong
+`SECRET_KEY` and `AUDIT_KEY` values in those same secret settings. When migrating
+an existing deployment, reuse its keys; changing the audit key invalidates the
+verification of existing history. Preserve both keys across redeployments.
+
+The hosted application is at https://commonroom-ledger.onrender.com.
 
 All database operations go directly to the remote primary. A successful commit
 does not depend on Render's temporary filesystem. If the database is unavailable,
