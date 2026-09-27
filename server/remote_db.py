@@ -69,7 +69,10 @@ class Connection:
         self.connection = connection
 
     def execute(self, sql, params=()):
-        return Cursor(_call(self.connection.execute, sql, params))
+        cursor = Cursor(_call(self.connection.execute, sql, params))
+        if sql.startswith("SELECT e.*,u.name AS actor") and "action" not in cursor.names:
+            logging.getLogger(__name__).error("Unexpected activity column names: %s", cursor.names)
+        return cursor
 
     def executemany(self, sql, params):
         return Cursor(_call(self.connection.executemany, sql, params))
