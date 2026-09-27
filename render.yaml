@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: joshbeira-commonroom
+    name: commonroom-ledger
     runtime: docker
     plan: free
     branch: codex/free-hosting
@@ -11,9 +11,9 @@ services:
       - key: DEMO_ENABLED
         value: "false"
       - key: SECRET_KEY
-        generateValue: true
+        sync: false
       - key: AUDIT_KEY
-        generateValue: true
+        sync: false
       - key: TURSO_DATABASE_URL
         sync: false
       - key: TURSO_AUTH_TOKEN
