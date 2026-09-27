@@ -42,6 +42,31 @@ def test_migration_script_errors_are_not_silently_ignored():
     db.close()
 
 
+def test_remote_migrations_use_a_table_and_survive_repeated_startup(tmp_path, monkeypatch):
+    from server import db as database
+
+    path = str(tmp_path / "remote.db")
+
+    class TursoConnection(Connection):
+        def executescript(self, sql):
+            assert "PRAGMA user_version" not in sql
+            return super().executescript(sql)
+
+    monkeypatch.setattr(
+        database, "connect", lambda _: TursoConnection(libsql.connect(path, isolation_level=None))
+    )
+    database.migrate("libsql://test.example.com")
+    db = database.connect(path)
+    db.execute("INSERT INTO rate_limits VALUES ('preserved', 1, 123)")
+    db.close()
+    database.migrate("libsql://test.example.com")
+    db = database.connect(path)
+    assert db.execute("SELECT count FROM rate_limits WHERE key='preserved'").fetchone()[0] == 1
+    assert db.execute("SELECT COUNT(*) FROM commonroom_schema_migrations").fetchone()[0] == 2
+    assert db.execute("SELECT COUNT(*) FROM stream_leases").fetchone()[0] == 0
+    db.close()
+
+
 def test_render_never_falls_back_to_temporary_storage(monkeypatch):
     from server import create_app
 

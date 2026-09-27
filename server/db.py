@@ -43,16 +43,35 @@ def migrate(path):
     if not remote:
         Path(path).parent.mkdir(parents=True, exist_ok=True)
     db = connect(path)
-    if not remote:
-        db.execute("PRAGMA journal_mode = WAL")
-    version = db.execute("PRAGMA user_version").fetchone()[0]
-    for migration in sorted(Path(__file__).with_name("migrations").glob("*.sql")):
-        number = int(migration.stem.split("_")[0])
-        if number > version:
-            db.executescript(
-                f"BEGIN IMMEDIATE;\n{migration.read_text()}\nPRAGMA user_version = {number};\nCOMMIT;"
+    try:
+        if remote:
+            # Turso read/write tokens cannot set PRAGMA user_version. Keep the
+            # schema version in an ordinary table, committed with each migration.
+            db.execute(
+                "CREATE TABLE IF NOT EXISTS commonroom_schema_migrations (version INTEGER PRIMARY KEY)"
             )
-    db.close()
+            version = db.execute(
+                "SELECT COALESCE(MAX(version), 0) FROM commonroom_schema_migrations"
+            ).fetchone()[0]
+        else:
+            db.execute("PRAGMA journal_mode = WAL")
+            version = db.execute("PRAGMA user_version").fetchone()[0]
+        for migration in sorted(Path(__file__).with_name("migrations").glob("*.sql")):
+            number = int(migration.stem.split("_")[0])
+            if number > version:
+                record_version = (
+                    f"INSERT INTO commonroom_schema_migrations VALUES ({number});"
+                    if remote
+                    else f"PRAGMA user_version = {number};"
+                )
+                db.executescript(
+                    f"BEGIN IMMEDIATE;\n{migration.read_text()}\n{record_version}\nCOMMIT;"
+                )
+    except Exception:
+        db.rollback()
+        raise
+    finally:
+        db.close()
 
 
 def close_db(_error=None):
