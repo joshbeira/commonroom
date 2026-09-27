@@ -23,7 +23,7 @@ def _call(function, *args):
             if value := os.getenv(key):
                 message = message.replace(value, "[redacted]")
         message = re.sub(r"eyJ[A-Za-z0-9_.-]+", "[redacted]", message)
-        message = re.sub(r"(?:https?|libsql)://\\S+", "[endpoint]", message)
+        message = re.sub(r"(?:https?|libsql)://\S+", "[endpoint]", message)
         logging.getLogger(__name__).error(
             "Remote database %s failed: %s", function.__name__, message[:400]
         )
